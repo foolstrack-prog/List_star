@@ -38,14 +38,18 @@ function addItem(product, order){
     </div>  
   `;  
   
+  // Mark as Complete
   div.querySelector(".complete").onclick = () => {  
     div.style.opacity = "0.5";  
-    div.style.border = "1px solid #10b981";  
+    div.style.border = "1px solid #10b981"; 
+    div.classList.add("is-done"); // Tagging for the export function
   };  
   
+  // Mark as Cancelled
   div.querySelector(".cancel").onclick = () => {  
     div.style.opacity = "0.5";  
     div.style.border = "1px solid #ef4444";  
+    div.remove(); // Actually remove cancelled items from list
   };  
   
   listDiv.appendChild(div);  
@@ -63,30 +67,54 @@ document.getElementById("importBtn").onclick = () => {
   }  
 };  
   
-/* Share PDF (Using the Fixed Code from the previous interaction) */  
+/* ---------------------------------------------------- */
+/* FIXED SHARE LOGIC (Formats list for WhatsApp)        */
+/* ---------------------------------------------------- */
 document.querySelector(".pdf-download").onclick = () => {  
-  const filename = "Orders_Report.pdf";
-  const shareText = "Check out the latest stock orders report: " + filename;
   
-  // --- OPTION 1: Use Web Share API (Best for modern mobile browsers) ---
-  if (navigator.share) {
-    navigator.share({
-        title: 'Orders Report',
-        text: shareText,
-        // url: 'https://yourwebsite.com/path/to/Orders_Report.pdf', 
-    })
-    .then(() => console.log('Successful share'))
-    .catch((error) => {
-        console.log('Error sharing or user cancelled:', error);
-        triggerDownload(); 
-    });
-  } else {
-    // --- OPTION 2: Fallback to direct download link (for desktop/older browsers) ---
-    triggerDownload();
+  // 1. Get all items currently in the list
+  const items = document.querySelectorAll(".item");
+  
+  if(items.length === 0) {
+    alert("The list is empty! Add items before sharing.");
+    return;
   }
 
-  function triggerDownload() {
-    alert(`Web Share API not supported or failed. Simulating download for manual sharing of ${filename}.`);
-    console.log(`Simulating download of ${filename}.`);
+  // 2. Build the formatted WhatsApp message
+  let message = "*📋 STOCK ORDER REPORT*\n------------------\n";
+  
+  items.forEach((div, index) => {
+     const product = div.querySelector("strong").innerText;
+     const ref = div.querySelector("small").innerText;
+     
+     // Check if the item was marked as done
+     const isDone = div.classList.contains("is-done");
+     const statusIcon = isDone ? "✅" : "⬜";
+     
+     message += `${index + 1}. ${statusIcon} *${product}*\n   Ref: ${ref}\n\n`;
+  });
+
+  message += `_Total Items: ${items.length}_`;
+
+  // 3. Share Functionality
+  // Tries to use the native mobile share menu first.
+  // If that fails (or on desktop), opens WhatsApp Web directly.
+  if (navigator.share) {
+    navigator.share({
+        title: 'Stock Orders',
+        text: message
+    })
+    .catch((error) => {
+        console.log('Sharing failed', error);
+        openWhatsApp(message); // Fallback
+    });
+  } else {
+    openWhatsApp(message);
   }
 };
+
+// Helper to open WhatsApp directly
+function openWhatsApp(text) {
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
