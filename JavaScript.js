@@ -42,14 +42,14 @@ function addItem(product, order){
   div.querySelector(".complete").onclick = () => {  
     div.style.opacity = "0.5";  
     div.style.border = "1px solid #10b981"; 
-    div.classList.add("is-done"); // Tagging for the export function
+    div.classList.add("is-done"); 
   };  
   
   // Mark as Cancelled
   div.querySelector(".cancel").onclick = () => {  
     div.style.opacity = "0.5";  
     div.style.border = "1px solid #ef4444";  
-    div.remove(); // Actually remove cancelled items from list
+    div.remove(); 
   };  
   
   listDiv.appendChild(div);  
@@ -68,7 +68,7 @@ document.getElementById("importBtn").onclick = () => {
 };  
   
 /* ---------------------------------------------------- */
-/* FIXED SHARE LOGIC (Formats list for WhatsApp)        */
+/* FIXED SHARE LOGIC (Direct WhatsApp Link)             */
 /* ---------------------------------------------------- */
 document.querySelector(".pdf-download").onclick = () => {  
   
@@ -96,25 +96,10 @@ document.querySelector(".pdf-download").onclick = () => {
 
   message += `_Total Items: ${items.length}_`;
 
-  // 3. Share Functionality
-  // Tries to use the native mobile share menu first.
-  // If that fails (or on desktop), opens WhatsApp Web directly.
-  if (navigator.share) {
-    navigator.share({
-        title: 'Stock Orders',
-        text: message
-    })
-    .catch((error) => {
-        console.log('Sharing failed', error);
-        openWhatsApp(message); // Fallback
-    });
-  } else {
-    openWhatsApp(message);
-  }
-};
+  // 3. Share Functionality (FIXED)
+  // We bypassed navigator.share because it was causing the "PDF Title" bug.
+  // Now we send the text directly to WhatsApp.
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 
-// Helper to open WhatsApp directly
-function openWhatsApp(text) {
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-}
+};
