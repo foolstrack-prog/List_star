@@ -42,6 +42,7 @@ function addItem(product, order){
   div.querySelector(".complete").onclick = () => {  
     div.style.opacity = "0.5";  
     div.style.border = "1px solid #10b981"; 
+    // Add a class to track completion status for the report
     div.classList.add("is-done"); 
   };  
   
@@ -68,7 +69,7 @@ document.getElementById("importBtn").onclick = () => {
 };  
   
 /* ---------------------------------------------------- */
-/* FIXED SHARE LOGIC (Direct WhatsApp Link)             */
+/* SHARE LOGIC (PDF Invoice Print)                      */
 /* ---------------------------------------------------- */
 document.querySelector(".pdf-download").onclick = () => {  
   
@@ -80,26 +81,84 @@ document.querySelector(".pdf-download").onclick = () => {
     return;
   }
 
-  // 2. Build the formatted WhatsApp message
-  let message = "*📋 STOCK ORDER REPORT*\n------------------\n";
-  
-  items.forEach((div, index) => {
+  // 2. Build the HTML structure for a clean "invoice paper" style
+  // Using white background and black text as requested.
+  let invoiceHTML = `
+    <html>
+    <head>
+      <title>Stock Order Invoice</title>
+      <style>
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: #ffffff; /* White Paper */
+            color: #000000;      /* Black Text */
+            padding: 40px; 
+        }
+        h1 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 2px solid #000; padding: 12px; text-align: left; }
+        th { background: #f0f0f0; font-weight: 800; }
+        .status-cell { font-weight: bold; text-align: center;}
+        .footer { margin-top: 30px; text-align: right; font-weight: 800; font-size: 18px;}
+        /* Ensure background colors print */
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Stock Order Invoice</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Product Name</th>
+            <th>Supplier / Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  // 3. Iterate through list items and add table rows
+  items.forEach((div) => {
+     // Extract text from DOM elements
      const product = div.querySelector("strong").innerText;
      const ref = div.querySelector("small").innerText;
      
-     // Check if the item was marked as done
+     // Check status based on the class added earlier
      const isDone = div.classList.contains("is-done");
-     const statusIcon = isDone ? "✅" : "⬜";
+     const statusText = isDone ? "COMPLETED" : "PENDING";
      
-     message += `${index + 1}. ${statusIcon} *${product}*\n   Ref: ${ref}\n\n`;
+     invoiceHTML += `
+       <tr>
+         <td class="status-cell">${statusText}</td>
+         <td>${product}</td>
+         <td>${ref}</td>
+       </tr>
+     `;
   });
 
-  message += `_Total Items: ${items.length}_`;
+  // 4. Close HTML and trigger print on load
+  invoiceHTML += `
+        </tbody>
+      </table>
+      <div class="footer">Total Items: ${items.length}</div>
+      <script>
+        // Automatically trigger print dialog when popup loads
+        window.onload = () => { 
+             window.print(); 
+             // Optional: close window after printing (some browsers block this)
+             // window.close(); 
+        }
+      </script>
+    </body>
+    </html>
+  `;
 
-  // 3. Share Functionality (FIXED)
-  // We bypassed navigator.share because it was causing the "PDF Title" bug.
-  // Now we send the text directly to WhatsApp.
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank');
+  // 5. Open new window and write the invoice content
+  const printWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+  printWindow.document.open();
+  printWindow.document.write(invoiceHTML);
+  printWindow.document.close(); // necessary for IE >= 10 for onload to fire
 
 };
