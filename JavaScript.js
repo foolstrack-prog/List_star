@@ -3,7 +3,7 @@
 const productInput = document.getElementById("productName");  
 const orderInput = document.getElementById("orderName");  
 const addBtn = document.getElementById("addBtn");  
-const listDiv = document.getElementById("list");  
+const listBody = document.getElementById("list"); // This is now the TBODY
   
 /* Add Item */  
 addBtn.onclick = () => {  
@@ -21,45 +21,40 @@ addBtn.onclick = () => {
   orderInput.value = "";  
 };  
   
-/* Add item to UI */  
+/* Add item to TABLE function */  
 function addItem(product, order){  
-  const div = document.createElement("div");  
-  div.className = "item";  
+  const tr = document.createElement("tr");  
+  tr.className = "item-row";  
   
-  div.innerHTML = `  
-    <div>  
-      <strong>${product}</strong><br>  
-      <small>${order}</small>  
-    </div>  
-  
-    <div class="actions">  
-      <button class="complete">Done</button>  
-      <button class="cancel">Cancel</button>  
-    </div>  
+  // Create Table Cells
+  tr.innerHTML = `  
+    <td class="td-product"><strong>${product}</strong></td>
+    <td class="td-ref">${order}</td>
+    <td class="actions">  
+      <button class="complete" title="Done">✔</button>  
+      <button class="cancel" title="Remove">✖</button>  
+    </td>  
   `;  
   
-  // Mark as Complete
-  div.querySelector(".complete").onclick = () => {  
-    div.style.opacity = "0.5";  
-    div.style.border = "1px solid #10b981"; 
-    // Add a class to track completion status for the report
-    div.classList.add("is-done"); 
+  // Mark as Complete (Green Highlight)
+  tr.querySelector(".complete").onclick = () => {  
+    tr.style.backgroundColor = "#e6fffa"; 
+    tr.style.color = "#047857";
+    tr.classList.add("is-done"); 
   };  
   
-  // Mark as Cancelled
-  div.querySelector(".cancel").onclick = () => {  
-    div.style.opacity = "0.5";  
-    div.style.border = "1px solid #ef4444";  
-    div.remove(); 
+  // Mark as Cancelled (Remove Row)
+  tr.querySelector(".cancel").onclick = () => {  
+    tr.style.opacity = "0"; 
+    setTimeout(() => tr.remove(), 300); // Wait for fade out
   };  
   
-  listDiv.appendChild(div);  
+  listBody.appendChild(tr);  
 }  
   
 /* Import JSON */  
 document.getElementById("importBtn").onclick = () => {  
   const json = prompt("Paste JSON: [{product:'', order:''}]");  
-  
   try{  
     const arr = JSON.parse(json);  
     arr.forEach(x => addItem(x.product, x.order));  
@@ -73,37 +68,26 @@ document.getElementById("importBtn").onclick = () => {
 /* ---------------------------------------------------- */
 document.querySelector(".pdf-download").onclick = () => {  
   
-  // 1. Get all items currently in the list
-  const items = document.querySelectorAll(".item");
+  // Get all table rows
+  const rows = document.querySelectorAll(".item-row");
   
-  if(items.length === 0) {
+  if(rows.length === 0) {
     alert("The list is empty! Add items before sharing.");
     return;
   }
 
-  // 2. Build the HTML structure for a clean "invoice paper" style
-  // Using white background and black text as requested.
   let invoiceHTML = `
     <html>
     <head>
       <title>Stock Order Invoice</title>
       <style>
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background: #ffffff; /* White Paper */
-            color: #000000;      /* Black Text */
-            padding: 40px; 
-        }
-        h1 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
+        body { font-family: sans-serif; padding: 40px; }
+        h1 { text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 2px solid #000; padding: 12px; text-align: left; }
-        th { background: #f0f0f0; font-weight: 800; }
-        .status-cell { font-weight: bold; text-align: center;}
-        .footer { margin-top: 30px; text-align: right; font-weight: 800; font-size: 18px;}
-        /* Ensure background colors print */
-        @media print {
-            body { -webkit-print-color-adjust: exact; }
-        }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th { background: #f4f4f4; }
+        .status-cell { text-align: center; font-weight: bold; }
+        .footer { margin-top: 20px; text-align: right; font-weight: bold;}
       </style>
     </head>
     <body>
@@ -113,24 +97,23 @@ document.querySelector(".pdf-download").onclick = () => {
           <tr>
             <th>Status</th>
             <th>Product Name</th>
-            <th>Supplier / Reference</th>
+            <th>Reference</th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  // 3. Iterate through list items and add table rows
-  items.forEach((div) => {
-     // Extract text from DOM elements
-     const product = div.querySelector("strong").innerText;
-     const ref = div.querySelector("small").innerText;
+  // Iterate through table rows to build PDF
+  rows.forEach((tr) => {
+     const product = tr.querySelector(".td-product").innerText;
+     const ref = tr.querySelector(".td-ref").innerText;
      
-     // Check status based on the class added earlier
-     const isDone = div.classList.contains("is-done");
+     const isDone = tr.classList.contains("is-done");
      const statusText = isDone ? "COMPLETED" : "PENDING";
+     const bg = isDone ? "#e6fffa" : "#fff";
      
      invoiceHTML += `
-       <tr>
+       <tr style="background:${bg}">
          <td class="status-cell">${statusText}</td>
          <td>${product}</td>
          <td>${ref}</td>
@@ -138,27 +121,18 @@ document.querySelector(".pdf-download").onclick = () => {
      `;
   });
 
-  // 4. Close HTML and trigger print on load
   invoiceHTML += `
         </tbody>
       </table>
-      <div class="footer">Total Items: ${items.length}</div>
+      <div class="footer">Total Items: ${rows.length}</div>
       <script>
-        // Automatically trigger print dialog when popup loads
-        window.onload = () => { 
-             window.print(); 
-             // Optional: close window after printing (some browsers block this)
-             // window.close(); 
-        }
+        window.onload = () => { window.print(); }
       </script>
     </body>
     </html>
   `;
 
-  // 5. Open new window and write the invoice content
-  const printWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
-  printWindow.document.open();
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
   printWindow.document.write(invoiceHTML);
-  printWindow.document.close(); // necessary for IE >= 10 for onload to fire
-
+  printWindow.document.close();
 };
