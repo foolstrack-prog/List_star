@@ -5,6 +5,9 @@ const orderInput = document.getElementById("orderName");
 const addBtn = document.getElementById("addBtn");
 const listBody = document.getElementById("list"); 
 
+// GLOBAL COUNTER: Tracks the sequence number for every new item
+let itemCount = 0; 
+
 /* Add Item */
 addBtn.onclick = () => {
   const product = productInput.value.trim();
@@ -21,11 +24,17 @@ addBtn.onclick = () => {
 
 /* Add item to TABLE function */
 function addItem(product, order){
+  // INCREMENT AND USE COUNTER for sequential numbering
+  itemCount++;
+  
   const tr = document.createElement("tr");
   tr.className = "item-row";
 
   tr.innerHTML = `
-    <td class="td-product"><strong>${product}</strong></td>
+    <td class="td-product">
+      <span style="font-weight:bold; margin-right: 6px; color:#666;">${itemCount}.</span>
+      <strong>${product}</strong>
+    </td>
     <td class="td-ref">${order}</td>
     <td class="actions">
       <button class="complete" title="Done">✔</button>
@@ -52,11 +61,28 @@ document.getElementById("importBtn").onclick = () => {
   const json = prompt("Paste JSON: [{product:'', order:''}]");
   try{
     const arr = JSON.parse(json);
+    // addItem handles the numbering for imported items too
     arr.forEach(x => addItem(x.product, x.order));
   }catch(e){
     alert("Invalid JSON");
   }
 };
+
+/* Load Initial / Pre-defined Items */
+function loadInitialItems() {
+  const initialData = [
+    { "product": "Bluetooth Headphones", "order": "Supplier X / PO-501" },
+    { "product": "Portable Charger (10k mAh)", "order": "Vendor Y / INV-722" },
+    { "product": "Ergonomic Keyboard", "order": "Supplier X / PO-502" }
+  ];
+  
+  initialData.forEach(item => {
+    addItem(item.product, item.order);
+  });
+}
+
+// Automatically load the initial list when the script starts
+loadInitialItems();
 
 /* ---------------------------------------------------- */
 /* SHARED HELPER: Generate Invoice Content              */
@@ -83,7 +109,10 @@ function getInvoiceContent() {
   `;
 
   rows.forEach((tr) => {
-     const product = tr.querySelector(".td-product").innerText;
+     // Clean up the product text to remove the sequence number (e.g., "1. Product Name" -> "Product Name")
+     let productText = tr.querySelector(".td-product").innerText.trim();
+     const product = productText.replace(/^\d+\.\s*/, ''); 
+     
      const ref = tr.querySelector(".td-ref").innerText;
      const isDone = tr.classList.contains("is-done");
      const statusText = isDone ? "COMPLETED" : "PENDING";
@@ -154,11 +183,14 @@ document.getElementById("waBtn").onclick = () => {
 
     let message = "📋 *STOCK ORDER REPORT* 📋\n\n";
     rows.forEach((tr, index) => {
-        const product = tr.querySelector(".td-product").innerText;
+        // Clean product name for external reports
+        const product = tr.querySelector(".td-product").innerText.replace(/^\d+\.\s*/, ''); 
         const ref = tr.querySelector(".td-ref").innerText;
         const isDone = tr.classList.contains("is-done");
         const icon = isDone ? "✅" : "⬜"; 
-        message += `${index + 1}. ${icon} *${product}*\n   Ref: ${ref}\n\n`;
+        
+        // Use index + 1 for clean sequential numbering in the WhatsApp message
+        message += `${index + 1}. ${icon} *${product}*\n   Ref: ${ref}\n\n`; 
     });
     message += `_Total Items: ${rows.length}_`;
     
