@@ -1,42 +1,41 @@
-<!doctype html>
-<html lang="en">  
-<head>  
-    <meta charset="utf-8" />  
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />  
-    <title>Stock Order Manager — Table View</title>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Order Manager</title>
     <link rel="stylesheet" href="styles.css">
-</head>  
-<body>  
-<div class="app">    
-    <header style="margin-bottom:14px">  
-        <h1>Stock Order Manager</h1>  
-        <p class="lead">Table View • Clean UI • PDF Invoice</p>  
-    </header>    
-    
-    <section class="card">  
-        <form id="addForm" onsubmit="return false" style="display:flex;flex-direction:column;gap:12px">  
-            <div>  
-                <label>Product Name</label>  
-                <input id="productName" placeholder="e.g. Charger Cable" type="text" />  
-            </div>  
-            <div>  
-                <label>Supplier / Order Ref</label>  
-                <input id="orderName" placeholder="e.g. Supplier A / PO-123" type="text" />  
-            </div>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
 
-            <div style="display:flex;gap:10px">  
-                <button class="btn primary" id="addBtn" type="button">Add to Table</button>  
-                <button class="btn secondary" id="importBtn">Import</button>  
-            </div>  
-        </form>  
+<div class="app">
+    <div class="card">
+        <h1>📦 Stock Order Manager</h1>
+        <p class="lead">Manage and share your product lists.</p>
+        
+        <div style="margin-top:15px;">
+            <label>Product Name</label>
+            <input type="text" id="productName" placeholder="e.g. USB C Cable">
+        </div>
+
+        <div style="margin-top:10px;">
+            <label>Supplier / Order Ref</label>
+            <input type="text" id="orderName" placeholder="e.g. Amazon / #4402">
+        </div>
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button id="addBtn" class="btn primary" style="flex:2;">+ Add Item</button>
+            <button id="importBtn" class="btn secondary" style="flex:1;">Import</button>
+        </div>
 
         <div class="table-container">
-            <table id="stockTable">
+            <table>
                 <thead>
                     <tr>
                         <th style="width:40%">Product</th>
                         <th style="width:35%">Ref</th>
-                        <th style="width:25%">Action</th>
+                        <th style="width:25%">Status</th>
                     </tr>
                 </thead>
                 <tbody id="list">
@@ -44,19 +43,23 @@
             </table>
         </div>
 
-    </section>    
-    
-    <div class="pdf-box">  
-        <div class="pdf-icon">PDF</div>  
-        <div class="pdf-info">  
-            <div class="pdf-title">Orders_Report.pdf</div>  
-            <div class="pdf-sub">Print Table to PDF</div>  
-        </div>  
-        <button class="pdf-download">Share</button>  
-    </div>  
-</div>  
+        <div class="pdf-box">  
+            <div class="pdf-icon">PDF</div>  
+            <div class="pdf-info">  
+                <div class="pdf-title">Export Report</div>  
+                <div class="pdf-sub">Share or Save List</div>  
+            </div>  
+            
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;">
+                <button class="pdf-download" id="printBtn" style="background:#444" title="Print View">Print</button>
+                <button class="pdf-download" id="downloadPdfBtn" style="background:#ff3b30" title="Download File">Save</button>
+                <button class="pdf-download" id="waBtn" style="background:#25d366" title="WhatsApp">WA</button>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 <script src="JavaScript.js"></script>
-
-</body>  
+</body>
 </html>
