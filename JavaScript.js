@@ -176,7 +176,7 @@ document.getElementById("downloadPdfBtn").onclick = () => {
   html2pdf().set(opt).from(element).save();
 };
 
-// 3. WHATSAPP BUTTON
+// 3. WHATSAPP / WEB SHARE BUTTON (Updated for Web Share API fallback)
 document.getElementById("waBtn").onclick = () => {
     const rows = document.querySelectorAll(".item-row");
     if(rows.length === 0) { alert("List is empty!"); return; }
@@ -189,10 +189,24 @@ document.getElementById("waBtn").onclick = () => {
         const isDone = tr.classList.contains("is-done");
         const icon = isDone ? "✅" : "⬜"; 
         
-        // Use index + 1 for clean sequential numbering in the WhatsApp message
+        // Use index + 1 for clean sequential numbering in the message
         message += `${index + 1}. ${icon} *${product}*\n   Ref: ${ref}\n\n`; 
     });
     message += `_Total Items: ${rows.length}_`;
     
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    // Check if the Web Share API is supported (Recommended for mobile)
+    if (navigator.share) {
+        navigator.share({
+            title: 'Stock Order Report',
+            text: message
+        }).then(() => {
+            console.log('Shared successfully');
+        }).catch((error) => {
+            console.error('Error sharing:', error);
+        });
+    } else {
+        // Fallback to the standard WhatsApp link for non-supporting browsers (e.g., Desktop)
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    }
 };
